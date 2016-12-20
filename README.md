@@ -16,10 +16,18 @@ go get github.com/johnhjwsosd/redis-operation/redisoper
 Example
 ----------
 <pre><code>
-    redis := redisoper.NewRedis("127.0.0.1:6379", "123")
+	redis := redisoper.NewRedis("127.0.0.1:6379", "123")
 	pool := redis.NewPool()
-	res, err := redis.GetData(pool, "t2", "set")
-    	if err != nil {
+
+	res, err := redis.WriteData(pool, "zzz", "test1", "sortset", 1)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(res)
+	}
+
+	res, err = redis.GetData(pool, "zzz", "sortset", 0, -1)
+	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println(res)
