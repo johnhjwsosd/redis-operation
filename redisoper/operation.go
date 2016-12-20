@@ -45,7 +45,7 @@ func (rs *redisServer) NewPool() *redis.Pool {
 	}
 }
 
-func (_ *redisServer) GetDate(pool *redis.Pool, key, keyType string) (data interface{}, err error) {
+func (_ *redisServer) GetData(pool *redis.Pool, key, keyType string, args ...interface{}) (data interface{}, err error) {
 	conn := pool.Get()
 	defer conn.Close()
 
@@ -53,13 +53,59 @@ func (_ *redisServer) GetDate(pool *redis.Pool, key, keyType string) (data inter
 	case "string":
 		data, err = redis.Bytes(conn.Do("get", key))
 	case "list":
-		//data, err = redis.Strings(conn.Do("lpop", key))
+		argArrList := make([]interface{}, 2)
+		if len(args) > 2 {
+			argArrList = args[0:2]
+		} else {
+			argArrList = args
+		}
+		arrList := make([]int, 2)
+		for index, value := range argArrList {
+			if _, ok := value.(int); ok {
+				arrList[index] = value.(int)
+			} else {
+				data, err = nil, errors.New("list range error")
+				return
+			}
+		}
+		data, err = redis.Strings(conn.Do("lrange", key, arrList[0], arrList[1]))
 	case "hash":
-
+		argArrHash := make([]interface{}, 1)
+		if len(args) > 1 {
+			argArrHash = args[0:1]
+		} else {
+			argArrHash = args
+		}
+		arrHash := make([]string, 1)
+		for index, value := range argArrHash {
+			if _, ok := value.(string); ok {
+				arrHash[index] = value.(string)
+			} else {
+				data, err = nil, errors.New("hash field error")
+				return
+			}
+		}
+		data, err = redis.String(conn.Do("hget", key, arrHash[0]))
 	case "set":
 		data, err = redis.Strings(conn.Do("smembers", key))
 	case "sortset":
-		data, err = redis.Strings(conn.Do("zrange", key))
+		argArrSort := make([]interface{}, 1)
+		arrSort := make([]int, 2)
+
+		if len(args) > 2 {
+			argArrSort = args[0:2]
+		} else {
+			argArrSort = args
+		}
+		for index, value := range argArrSort {
+			if _, ok := value.(int); ok {
+				arrSort[index] = value.(int)
+			} else {
+				data, err = nil, errors.New("set range error")
+				return
+			}
+		}
+		data, err = redis.Strings(conn.Do("zrange", key, arrSort[0], arrSort[1]))
 	default:
 		data, err = nil, errors.New("input type err")
 	}
