@@ -165,3 +165,24 @@ func (_ *redisServer) WriteData(pool *redis.Pool, key, value, keyType string, ar
 	}
 	return
 }
+
+//DelData ...
+func (_ *redisServer) DelData(pool *redis.Pool, key string) (data interface{}, err error) {
+	conn := pool.Get()
+	defer conn.Close()
+	data, err = redis.Int64(conn.Do("del", key))
+	return
+}
+
+//RemData ...
+func (_ *redisServer) RemData(pool *redis.Pool, key, value, keyType string) (data interface{}, err error) {
+	conn := pool.Get()
+	defer conn.Close()
+	switch keyType {
+	case "set":
+		data, err = redis.Int64(conn.Do("srem", key, value))
+	case "sortset":
+		data, err = redis.Int64(conn.Do("srem", key, value))
+	}
+	return
+}
