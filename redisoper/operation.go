@@ -7,30 +7,30 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
-type redisServer struct {
-	redisHost string
-	redisAuth string
+//RedisServer 通过NewRedis得到对象
+type RedisServer struct {
+	pool *redis.Pool
 }
 
 //NewRedis get redisServer entity
 //returns 返回一个...
 //example redisHost "127.0.0.1:6379" redisPassword "123"
-func NewRedis(redisHost, redisAuth string) *redisServer {
-	return &redisServer{redisHost, redisAuth}
+func NewRedis(redisHost, redisAuth string) *RedisServer {
+	return &RedisServer{newPool(redisHost, redisAuth)}
 }
 
-func (rs *redisServer) NewPool() *redis.Pool {
+func newPool(redisHost, redisAuth string) *redis.Pool {
 	return &redis.Pool{
 		MaxIdle:     3,
 		MaxActive:   1000,
 		IdleTimeout: 240 * time.Second,
 		Dial: func() (redis.Conn, error) {
 
-			conn, err := redis.Dial("tcp", rs.redisHost)
+			conn, err := redis.Dial("tcp", redisHost)
 			if err != nil {
 				return nil, err
 			}
-			if _, err := conn.Do("AUTH", rs.redisAuth); err != nil {
+			if _, err := conn.Do("AUTH", redisAuth); err != nil {
 				conn.Close()
 				return nil, err
 			}
@@ -47,8 +47,9 @@ func (rs *redisServer) NewPool() *redis.Pool {
 }
 
 //GetData 读取数据
-func (r *redisServer) GetData(pool *redis.Pool, key, keyType string, args ...interface{}) (data interface{}, err error) {
-	conn := pool.Get()
+func (r *RedisServer) GetData(key, keyType string, args ...interface{}) (data interface{}, err error) {
+
+	conn := r.pool.Get()
 	defer conn.Close()
 
 	switch keyType {
@@ -115,8 +116,8 @@ func (r *redisServer) GetData(pool *redis.Pool, key, keyType string, args ...int
 }
 
 //WriteData ...
-func (_ *redisServer) WriteData(pool *redis.Pool, key, value, keyType string, args ...interface{}) (data interface{}, err error) {
-	conn := pool.Get()
+func (r *RedisServer) WriteData(key, value, keyType string, args ...interface{}) (data interface{}, err error) {
+	conn := r.pool.Get()
 	defer conn.Close()
 
 	switch keyType {
@@ -167,16 +168,16 @@ func (_ *redisServer) WriteData(pool *redis.Pool, key, value, keyType string, ar
 }
 
 //DelData ...
-func (_ *redisServer) DelData(pool *redis.Pool, key string) (data interface{}, err error) {
-	conn := pool.Get()
+func (r *RedisServer) DelData(key string) (data interface{}, err error) {
+	conn := r.pool.Get()
 	defer conn.Close()
 	data, err = redis.Int64(conn.Do("del", key))
 	return
 }
 
 //RemData ...
-func (_ *redisServer) RemData(pool *redis.Pool, key, value, keyType string) (data interface{}, err error) {
-	conn := pool.Get()
+func (r *RedisServer) RemData(key, value, keyType string) (data interface{}, err error) {
+	conn := r.pool.Get()
 	defer conn.Close()
 	switch keyType {
 	case "set":

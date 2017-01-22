@@ -8,42 +8,40 @@ import (
 
 func main() {
 	redis := redisoper.NewRedis("192.168.1.41:6379", "123")
-	pool := redis.NewPool()
-
-	res, err := redis.WriteData(pool, "zzz", "test2", "sortset", 1)
+	res, err := redis.WriteData("zzz", "test2", "sortset", 1)
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println(res)
 	}
 
-	res, err = redis.GetData(pool, "zzz", "sortset", 0, -1)
+	res, err = redis.GetData("zzz", "sortset", 0, -1)
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println(res)
 	}
 
-	res, err = redis.DelData(pool, "zzz")
+	res, err = redis.DelData("zzz")
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println(res)
 	}
 
-	res, err = redis.WriteData(pool, "xxx", "ssss", "set")
+	res, err = redis.WriteData("xxx", "ssss", "set")
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println(res)
 	}
-	res, err = redis.WriteData(pool, "xxx", "sss", "set")
+	res, err = redis.WriteData("xxx", "sss", "set")
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println(res)
 	}
-	res, err = redis.RemData(pool, "xxx", "ssss", "set")
+	res, err = redis.RemData("xxx", "ssss", "set")
 	if err != nil {
 		fmt.Println(err)
 	} else {
