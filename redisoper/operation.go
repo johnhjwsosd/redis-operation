@@ -1,7 +1,6 @@
 package redisoper
 
 import (
-	"errors"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
@@ -46,127 +45,6 @@ func newPool(redisHost, redisAuth string) *redis.Pool {
 	}
 }
 
-//GetData 读取数据
-func (r *RedisServer) GetData(key, keyType string, args ...interface{}) (data interface{}, err error) {
-
-	conn := r.pool.Get()
-	defer conn.Close()
-
-	switch keyType {
-	case "string":
-		data, err = redis.Bytes(conn.Do("get", key))
-	case "list":
-		argArrList := make([]interface{}, 2)
-		if len(args) > 2 {
-			argArrList = args[0:2]
-		} else {
-			argArrList = args
-		}
-		arrList := make([]int, 2)
-		for index, value := range argArrList {
-			if _, ok := value.(int); ok {
-				arrList[index] = value.(int)
-			} else {
-				data, err = nil, errors.New("list range error")
-				return
-			}
-		}
-		data, err = redis.Strings(conn.Do("lrange", key, arrList[0], arrList[1]))
-	case "hash":
-		argArrHash := make([]interface{}, 1)
-		if len(args) > 1 {
-			argArrHash = args[0:1]
-		} else {
-			argArrHash = args
-		}
-		arrHash := make([]string, 1)
-		for index, value := range argArrHash {
-			if _, ok := value.(string); ok {
-				arrHash[index] = value.(string)
-			} else {
-				data, err = nil, errors.New("hash field error")
-				return
-			}
-		}
-		data, err = redis.String(conn.Do("hget", key, arrHash[0]))
-	case "set":
-		data, err = redis.Strings(conn.Do("smembers", key))
-	case "sortset":
-		argArrSort := make([]interface{}, 2)
-		arrSort := make([]int, 2)
-
-		if len(args) > 2 {
-			argArrSort = args[0:2]
-		} else {
-			argArrSort = args
-		}
-		for index, value := range argArrSort {
-			if _, ok := value.(int); ok {
-				arrSort[index] = value.(int)
-			} else {
-				data, err = nil, errors.New("set range error")
-				return
-			}
-		}
-		data, err = redis.Strings(conn.Do("zrange", key, arrSort[0], arrSort[1]))
-	default:
-		data, err = nil, errors.New("input type err")
-	}
-	return
-}
-
-//WriteData ...
-func (r *RedisServer) WriteData(key, value, keyType string, args ...interface{}) (data interface{}, err error) {
-	conn := r.pool.Get()
-	defer conn.Close()
-
-	switch keyType {
-	case "string":
-		data, err = redis.Int64(conn.Do("set", key, value))
-	case "list":
-		data, err = redis.Int64(conn.Do("lpush", key, value))
-	case "hash":
-		argArrHash := make([]interface{}, 1)
-		if len(args) > 1 {
-			argArrHash = args[0:1]
-		} else {
-			argArrHash = args
-		}
-		arrHash := make([]string, 1)
-		for index, value := range argArrHash {
-			if _, ok := value.(string); ok {
-				arrHash[index] = value.(string)
-			} else {
-				data, err = nil, errors.New("hash field error")
-				return
-			}
-		}
-		data, err = redis.Int64(conn.Do("hset", key, arrHash[0], value))
-	case "set":
-		data, err = redis.Int64(conn.Do("sadd", key, value))
-	case "sortset":
-		argArrSort := make([]interface{}, 1)
-		arrSort := make([]int, 2)
-		if len(args) > 1 {
-			argArrSort = args[0:1]
-		} else {
-			argArrSort = args
-		}
-		for index, value := range argArrSort {
-			if _, ok := value.(int); ok {
-				arrSort[index] = value.(int)
-			} else {
-				data, err = nil, errors.New("error sortset level error")
-				return
-			}
-		}
-		data, err = redis.Int64(conn.Do("zadd", key, arrSort[0], value))
-	default:
-		data, err = nil, errors.New("input type err")
-	}
-	return
-}
-
 //DelData ...
 func (r *RedisServer) DelData(key string) (data interface{}, err error) {
 	conn := r.pool.Get()
@@ -175,15 +53,94 @@ func (r *RedisServer) DelData(key string) (data interface{}, err error) {
 	return
 }
 
-//RemData ...
-func (r *RedisServer) RemData(key, value, keyType string) (data interface{}, err error) {
+//Get String get
+func (r *RedisServer) Get(key string) (data interface{}, err error) {
 	conn := r.pool.Get()
 	defer conn.Close()
-	switch keyType {
-	case "set":
-		data, err = redis.Int64(conn.Do("srem", key, value))
-	case "sortset":
-		data, err = redis.Int64(conn.Do("srem", key, value))
+	data, err = redis.Bytes(conn.Do("get", key))
+	return
+}
+
+//Set String set
+func (r *RedisServer) Set(key, value string) (data interface{}, err error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.String(conn.Do("set", key, value))
+	return
+}
+
+//Lrange ...
+func (r *RedisServer) Lrange(key string, startIndex, endIndex int) (data interface{}, err error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.Strings(conn.Do("lrange", key, startIndex, endIndex))
+	return
+}
+
+//Lpush ...
+func (r *RedisServer) Lpush(key, value string) (data interface{}, err error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.Int64(conn.Do("lpush", key, value))
+	return
+}
+
+//Hget ...
+func (r *RedisServer) Hget(key, field string) (data interface{}, err error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.String(conn.Do("hget", key, field))
+	return
+}
+
+//Hset ...
+func (r *RedisServer) Hset(key, field, value string) (data interface{}, err error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.String(conn.Do("hset", key, field, value))
+	return
+}
+
+//Sadd ...
+func (r *RedisServer) Sadd(key, value string) (data interface{}, err error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.Int64(conn.Do("sadd", key, value))
+	return
+}
+
+//Smembers ...
+func (r *RedisServer) Smembers(key string) (data interface{}, err error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.Strings(conn.Do("smembers", key))
+	return
+}
+
+//RemSet ...
+func (r *RedisServer) RemSet(key, value string) (data interface{}, err error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.Int64(conn.Do("srem", key, value))
+	return
+}
+
+//Zrange ...
+func (r *RedisServer) Zrange(key string, startIndex, endIndex int, isWithScores bool) (data interface{}, err error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	if isWithScores {
+		data, err = redis.Int64(conn.Do("zrange", key, startIndex, endIndex, "withscores"))
+	} else {
+		data, err = redis.Int64(conn.Do("zrange", key, startIndex, endIndex))
 	}
+	return
+}
+
+//Zadd ...
+func (r *RedisServer) Zadd(key, value string, score int) (data interface{}, err error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.Int64(conn.Do("zadd", key, score, value))
 	return
 }
