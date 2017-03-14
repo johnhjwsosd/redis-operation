@@ -18,17 +18,18 @@ Example
 <pre><code>
 	redis := redisoper.NewRedis("127.0.0.1:6379", "123")
 
-	res, err := redis.WriteData("zzz", "test1", "sortset", 1)
+	res, err = redis.Set("t1", "22")
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println(res)
 	}
 
-	res, err = redis.GetData("zzz", "sortset", 0, -1)
+	res, err := redis.Get("t1")
 	if err != nil {
 		fmt.Println(err)
 	} else {
-		fmt.Println(res)
+		fmt.Println(string(res.([]byte)))
 	}
+
 </code></pre>
