@@ -101,6 +101,30 @@ func (r *RedisServer) Hset(key, field, value string) (data interface{}, err erro
 	return
 }
 
+//Hexists ...
+func (r *RedisServer) Hexists(key, field string) (data interface{}, err error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.String(conn.Do("hexists", key, field))
+	return
+}
+
+//Hdel ...
+func (r *RedisServer) Hdel(key, field string) (data interface{}, err error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.String(conn.Do("hdel", key, field))
+	return
+}
+
+//Hkeys ...
+func (r *RedisServer) Hkeys(key string) (data interface{}, err error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.String(conn.Do("hkeys", key))
+	return
+}
+
 //Sadd ...
 func (r *RedisServer) Sadd(key, value string) (data interface{}, err error) {
 	conn := r.pool.Get()

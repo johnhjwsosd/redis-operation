@@ -1,0 +1,27 @@
+<component name="libraryTable">
+  <library name="GOPATH &lt;redis-operation&gt;">
+    <CLASSES>
+      <root url="file://E:/Gopackage/src/git.oschina.net" />
+      <root url="file://E:/Gopackage/src/github.com" />
+      <root url="file://E:/Gopackage/src/golang.org" />
+      <root url="file://E:/Gopackage/src/jsonextract" />
+      <root url="file://E:/Gopackage/src/sourcegraph.com" />
+      <root url="file://E:/Gopackage/src/mypackage" />
+      <root url="file://E:/Gopackage/src/redisoper" />
+      <root url="file://E:/Gopackage/src/gopkg.in" />
+    </CLASSES>
+    <SOURCES>
+      <root url="file://E:/Gopackage/src/git.oschina.net" />
+      <root url="file://E:/Gopackage/src/github.com" />
+      <root url="file://E:/Gopackage/src/golang.org" />
+      <root url="file://E:/Gopackage/src/jsonextract" />
+      <root url="file://E:/Gopackage/src/sourcegraph.com" />
+      <root url="file://E:/Gopackage/src/mypackage" />
+      <root url="file://E:/Gopackage/src/redisoper" />
+      <root url="file://E:/Gopackage/src/gopkg.in" />
+    </SOURCES>
+    <excluded>
+      <root url="file://$PROJECT_DIR$" />
+    </excluded>
+  </library>
+</component>
