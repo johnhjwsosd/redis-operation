@@ -45,6 +45,13 @@ func newPool(redisHost, redisAuth string) *redis.Pool {
 	}
 }
 
+func (r *RedisServer) Ping()error{
+	conn:=r.pool.Get()
+	defer conn.Close()
+	err := r.pool.TestOnBorrow(conn,time.Now().Add(-time.Minute))
+	return err
+}
+
 //DelData ...
 func (r *RedisServer) DelData(key string) (data interface{}, err error) {
 	conn := r.pool.Get()
@@ -52,6 +59,21 @@ func (r *RedisServer) DelData(key string) (data interface{}, err error) {
 	data, err = redis.Int64(conn.Do("del", key))
 	return
 }
+
+func (r *RedisServer) Incr(key string)(data interface{},err error){
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.Int64(conn.Do("incr", key))
+	return
+}
+
+func (r *RedisServer) IncrBY(key string,value int)(data interface{},err error){
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.Int64(conn.Do("incrby", key,value))
+	return
+}
+
 
 //Get String get
 func (r *RedisServer) Get(key string) (data interface{}, err error) {
