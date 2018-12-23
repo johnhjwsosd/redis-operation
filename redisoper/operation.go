@@ -13,18 +13,17 @@ type RedisServer struct {
 
 //NewRedis get redisServer entity
 //returns 返回一个...
-//example redisHost "127.0.0.1:6379" redisPassword "123"
-func NewRedis(redisHost, redisAuth string) *RedisServer {
-	return &RedisServer{newPool(redisHost, redisAuth)}
+//example redisHost "127.0.0.1:6379" redisPassword "123" maxIdle 1000 maxActive 1000
+func NewRedis(redisHost, redisAuth string,maxIdle,maxActive int) *RedisServer {
+	return &RedisServer{newPool(redisHost, redisAuth,maxIdle,maxActive)}
 }
 
-func newPool(redisHost, redisAuth string) *redis.Pool {
+func newPool(redisHost, redisAuth string,maxIdle,maxActive int) *redis.Pool {
 	return &redis.Pool{
-		MaxIdle:     3,
-		MaxActive:   1000,
+		MaxIdle:     maxIdle,
+		MaxActive:   maxActive,
 		IdleTimeout: 240 * time.Second,
 		Dial: func() (redis.Conn, error) {
-
 			conn, err := redis.Dial("tcp", redisHost)
 			if err != nil {
 				return nil, err
@@ -84,10 +83,17 @@ func (r *RedisServer) Get(key string) (data interface{}, err error) {
 }
 
 //Set String set
-func (r *RedisServer) Set(key, value string) (data interface{}, err error) {
+func (r *RedisServer) Set(key string,value interface{}) (data interface{}, err error) {
 	conn := r.pool.Get()
 	defer conn.Close()
 	data, err = redis.String(conn.Do("set", key, value))
+	return
+}
+
+func (r *RedisServer) SetEx(key string,exp int,value interface{})(data interface{}, err error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.String(conn.Do("setex", key,exp,value))
 	return
 }
 
@@ -100,7 +106,7 @@ func (r *RedisServer) Lrange(key string, startIndex, endIndex int) (data interfa
 }
 
 //Lpush ...
-func (r *RedisServer) Lpush(key, value string) (data interface{}, err error) {
+func (r *RedisServer) Lpush(key string,value interface{}) (data interface{}, err error) {
 	conn := r.pool.Get()
 	defer conn.Close()
 	data, err = redis.Int64(conn.Do("lpush", key, value))
@@ -116,7 +122,7 @@ func (r *RedisServer) Hget(key, field string) (data interface{}, err error) {
 }
 
 //Hset ...
-func (r *RedisServer) Hset(key, field, value string) (data interface{}, err error) {
+func (r *RedisServer) Hset(key, field string,value interface{}) (data interface{}, err error) {
 	conn := r.pool.Get()
 	defer conn.Close()
 	data, err = redis.String(conn.Do("hset", key, field, value))
@@ -148,7 +154,7 @@ func (r *RedisServer) Hkeys(key string) (data interface{}, err error) {
 }
 
 //Sadd ...
-func (r *RedisServer) Sadd(key, value string) (data interface{}, err error) {
+func (r *RedisServer) Sadd(key string,value interface{}) (data interface{}, err error) {
 	conn := r.pool.Get()
 	defer conn.Close()
 	data, err = redis.Int64(conn.Do("sadd", key, value))
@@ -156,7 +162,7 @@ func (r *RedisServer) Sadd(key, value string) (data interface{}, err error) {
 }
 
 //Smembers ...
-func (r *RedisServer) Smembers(key string) (data interface{}, err error) {
+func (r *RedisServer) Smembers(key string,value interface{}) (data interface{}, err error) {
 	conn := r.pool.Get()
 	defer conn.Close()
 	data, err = redis.Strings(conn.Do("smembers", key))
@@ -164,7 +170,7 @@ func (r *RedisServer) Smembers(key string) (data interface{}, err error) {
 }
 
 //RemSet ...
-func (r *RedisServer) RemSet(key, value string) (data interface{}, err error) {
+func (r *RedisServer) RemSet(key string,value interface{}) (data interface{}, err error) {
 	conn := r.pool.Get()
 	defer conn.Close()
 	data, err = redis.Int64(conn.Do("srem", key, value))
@@ -184,9 +190,23 @@ func (r *RedisServer) Zrange(key string, startIndex, endIndex int, isWithScores 
 }
 
 //Zadd ...
-func (r *RedisServer) Zadd(key, value string, score int) (data interface{}, err error) {
+func (r *RedisServer) Zadd(key string,value interface{}, score int) (data interface{}, err error) {
 	conn := r.pool.Get()
 	defer conn.Close()
 	data, err = redis.Int64(conn.Do("zadd", key, score, value))
+	return
+}
+
+func (r *RedisServer) TTL(key string) (data interface{}, err error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.Int64(conn.Do("ttl", key))
+	return
+}
+
+func (r *RedisServer) Exists(key string)(data interface{}, err error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	data, err = redis.Int64(conn.Do("exists", key))
 	return
 }
